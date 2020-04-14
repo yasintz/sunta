@@ -41,12 +41,11 @@ async function axiosGet<T, S extends string | undefined = undefined>(
       ...localStorage.getItem(),
       [optionalPrefix as string]: apiResult,
     });
-
-    return localStorage.getItem();
+  } else {
+    localStorage.setItem(apiResult);
   }
-  localStorage.setItem(apiResult);
 
-  return apiResult;
+  return localStorage.getItem();
 }
 
 export default axiosGet;
