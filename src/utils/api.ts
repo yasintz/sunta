@@ -3,22 +3,9 @@ import axiosGet from './axios';
 import dayjs from './dayjs';
 import renameKeys from './renameKeys';
 
-export interface Country {
-  UlkeAdi: string;
-  UlkeAdiEn: string;
-  UlkeID: string;
-}
-
-export interface City {
-  SehirAdi: string;
-  SehirAdiEn: string;
-  SehirID: string;
-}
-
-export interface District {
-  IlceAdi: string;
-  IlceAdiEn: string;
-  IlceID: string;
+export interface Place {
+  id: string;
+  text: string;
 }
 
 export interface TimeInformation {
@@ -27,13 +14,35 @@ export interface TimeInformation {
 }
 
 class Requests {
-  getCountries = () => axiosGet<Country[]>('/ulkeler');
+  getCountries = () =>
+    axiosGet<any[]>('/ulkeler').then((items) =>
+      items.map((item) =>
+        renameKeys<Place>(item, {
+          UlkeID: 'id',
+          UlkeAdi: 'text',
+        })
+      )
+    );
 
   getCities = (countryId: string) =>
-    axiosGet<City>(`/sehirler?ulke=${countryId}`);
+    axiosGet<any[]>(`/sehirler?ulke=${countryId}`).then((items) =>
+      items.map((item) =>
+        renameKeys<Place>(item, {
+          SehirID: 'id',
+          SehirAdi: 'text',
+        })
+      )
+    );
 
   getDistricts = (cityId: string) =>
-    axiosGet<District>(`/ilceler?sehir=${cityId}`);
+    axiosGet<any[]>(`/ilceler?sehir=${cityId}`).then((items) =>
+      items.map((item) =>
+        renameKeys<Place>(item, {
+          IlceID: 'id',
+          IlceAdi: 'text',
+        })
+      )
+    );
 
   getPrayerTimes = async (districtId: string) => {
     const prayerTimeObject = await axiosGet<any[], string>(

@@ -1,12 +1,12 @@
 import React from 'react';
-import * as Api from './utils/api';
-import calcRemainingTime from './utils/calcRemainingTime';
+import * as Api from '../utils/api';
+import { calcRemainingTime } from '../utils/calc';
 
-type HomeProps = {
+type DiffProps = {
   timeInformations: Api.TimeInformation[];
 };
 
-const Home: React.FC<HomeProps> = (props) => {
+const Diff: React.FC<DiffProps> = (props) => {
   const [diff, setDiff] = React.useState(
     calcRemainingTime(props.timeInformations)
   );
@@ -14,17 +14,17 @@ const Home: React.FC<HomeProps> = (props) => {
   React.useEffect(() => {
     const interval = setInterval(() => {
       setDiff(calcRemainingTime(props.timeInformations));
-    }, 500);
+    }, 1000 * 30);
 
     return () => clearInterval(interval);
   }, [props.timeInformations]);
 
   const isRenderHour = diff.hours > 0;
   const isRenderMinute = isRenderHour || diff.minutes > 0;
-  const isRenderSecond = isRenderMinute || diff.seconds > 0;
+  const isRenderSecond = false && (isRenderMinute || diff.seconds > 0);
   return (
     <div className="page-container">
-      <div className="description">Gunesin Dogumuna</div>
+      <div className="description">Guneşin Doğumuna</div>
       <h1>
         {isRenderHour && (
           <span>{diff.hours.toString().padStart(2, '0')} saat </span>
@@ -40,4 +40,4 @@ const Home: React.FC<HomeProps> = (props) => {
   );
 };
 
-export default Home;
+export default Diff;

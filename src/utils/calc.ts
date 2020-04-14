@@ -11,11 +11,11 @@ function getByDate(
   ) as Api.TimeInformation;
 }
 
-function calcRemainingTime(
+function getSunriseDayjs(
   prayerTimes: Api.TimeInformation[],
   date = new Date(),
   sunriseDate = date
-): { hours: number; minutes: number; seconds: number } {
+): dayjs.Dayjs {
   const currentDateDayjs = dayjs(date);
 
   const currentSunriseTimeDayjs = dayjs(
@@ -29,8 +29,17 @@ function calcRemainingTime(
     const dateCopy = new Date(date);
     dateCopy.setDate(date.getDate() + 1);
 
-    return calcRemainingTime(prayerTimes, date, dateCopy);
+    return getSunriseDayjs(prayerTimes, date, dateCopy);
   }
+
+  return currentSunriseTimeDayjs;
+}
+
+export function calcRemainingTime(
+  prayerTimes: Api.TimeInformation[]
+): { hours: number; minutes: number; seconds: number } {
+  const currentDateDayjs = dayjs();
+  const currentSunriseTimeDayjs = getSunriseDayjs(prayerTimes);
   const duration = dayjs.duration(
     currentSunriseTimeDayjs.diff(currentDateDayjs)
   );
@@ -46,4 +55,7 @@ function calcRemainingTime(
   };
 }
 
-export default calcRemainingTime;
+export function getClock(prayerTimes: Api.TimeInformation[]): string {
+  const currentSunriseTimeDayjs = getSunriseDayjs(prayerTimes);
+  return currentSunriseTimeDayjs.format('HH:MM');
+}

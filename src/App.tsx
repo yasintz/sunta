@@ -1,47 +1,164 @@
 import React from 'react';
-import Home from './home';
 import * as Api from './utils/api';
+import SwipeableViews from 'react-swipeable-views';
 
-const DEFAULT_DISTRIC_ID = '9479';
-const HomeWrapper: React.FC = () => {
-  const [isLoading, setIsLoading] = React.useState(true);
+import Diff from './pages/diff';
+import Clock from './pages/clock';
+import { LocalStrategy } from './utils/strategy';
+import useStrategy from './hooks/useLocalStorage';
+import Settings from './pages/settings';
+import useWatch from './hooks/useWatch';
+
+const districLocalStrategy = new LocalStrategy('district', '9479');
+const countryLocalStrategy = new LocalStrategy('country', '2');
+const cityLocalStrategy = new LocalStrategy('city', '532');
+const swipeableIndexLocalStrategy = new LocalStrategy('swipeableIndex', 0);
+
+function App() {
+  const [countryId, setCountryId] = useStrategy(countryLocalStrategy);
+  const [cityId, setCityId] = useStrategy(cityLocalStrategy);
+  const [districtId, setDistrictId] = useStrategy(districLocalStrategy);
+
+  const [swipeableIndex, setSwipeableIndex] = useStrategy(
+    swipeableIndexLocalStrategy
+  );
+
+  const loadingCountRef = React.useRef(0);
+
   const [hasError, setHasError] = React.useState(false);
+
+  const [countries, setCountries] = React.useState<Api.Place[] | undefined>(
+    undefined
+  );
+
+  const [cities, setCities] = React.useState<Api.Place[] | undefined>(
+    undefined
+  );
+  const [districts, setDistricts] = React.useState<Api.Place[] | undefined>(
+    undefined
+  );
+
   const [timeInformations, setTimeInformations] = React.useState<
     Api.TimeInformation[] | undefined
   >(undefined);
 
-  React.useEffect(() => {
-    async function handleApi() {
-      try {
-        setTimeInformations(
-          await Api.requests.getPrayerTimes(DEFAULT_DISTRIC_ID)
-        );
-      } catch (error) {
-        setHasError(true);
-      }
-      setIsLoading(false);
+  const isLoading = loadingCountRef.current > 0;
+
+  const handleApi = React.useCallback(async (fn: () => Promise<any>) => {
+    loadingCountRef.current++;
+    try {
+      fn();
+    } catch (error) {
+      setHasError(true);
     }
-    handleApi();
+    loadingCountRef.current--;
   }, []);
 
-  const loadingComponent = <span>Loading...</span>;
+  React.useEffect(() => {
+    handleApi(async () => {
+      setCountries(await Api.requests.getCountries());
+    });
+  }, [handleApi]);
+
+  useWatch(
+    () => {
+      handleApi(async () => {
+        const newCities = await Api.requests.getCities(countryId);
+        const hasCityIdInCities = Boolean(
+          newCities.find((city) => city.id === cityId)
+        );
+        const selectedCityId = hasCityIdInCities ? cityId : newCities[0].id;
+
+        setCityId(selectedCityId);
+
+        setCities(newCities);
+      });
+    },
+    countryId,
+    true
+  );
+
+  useWatch(
+    () => {
+      handleApi(async () => {
+        const newDistricts = await Api.requests.getDistricts(cityId);
+
+        const hasDistrictIdInDistricts = Boolean(
+          newDistricts.find((district) => district.id === districtId)
+        );
+        const selectedDistrictId = hasDistrictIdInDistricts
+          ? districtId
+          : newDistricts[0].id;
+
+        setDistrictId(selectedDistrictId);
+
+        setDistricts(newDistricts);
+      });
+    },
+    cityId,
+    true
+  );
+
+  useWatch(
+    () => {
+      handleApi(async () => {
+        setTimeInformations(await Api.requests.getPrayerTimes(districtId));
+      });
+    },
+    districtId,
+    true
+  );
+
+  const loadingComponent = (
+    <div className="page-container">
+      <span>Loading...</span>
+    </div>
+  );
 
   if (isLoading) {
     return loadingComponent;
   }
+
   if (hasError) {
-    return <span>Error !</span>;
+    return (
+      <div className="page-container">
+        <span>Error !</span>
+      </div>
+    );
   }
 
-  if (timeInformations) {
+  if (timeInformations && countries && cities && districts) {
+    const apps = [
+      <Diff timeInformations={timeInformations} />,
+      <Clock timeInformations={timeInformations} />,
+      <Settings
+        countries={countries}
+        cities={cities}
+        districts={districts}
+        selectedCountryId={countryId}
+        selectedCityId={cityId}
+        selectedDistrictId={districtId}
+        setSelectedCountryId={setCountryId}
+        setSelectedCityId={setCityId}
+        setSelectedDistrictId={setDistrictId}
+      />,
+    ];
     return (
-      <>
-        <Home timeInformations={timeInformations} />
-      </>
+      <SwipeableViews
+        enableMouseEvents
+        index={swipeableIndex}
+        onChangeIndex={setSwipeableIndex}
+      >
+        {apps.map((app, index) => (
+          <div className="page-container" key={index}>
+            {app}
+          </div>
+        ))}
+      </SwipeableViews>
     );
   }
 
   return loadingComponent;
-};
+}
 
-export default HomeWrapper;
+export default App;
