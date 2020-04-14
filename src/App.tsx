@@ -1,26 +1,47 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Home from './home';
+import * as Api from './utils/api';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const DEFAULT_DISTRIC_ID = '9479';
+const HomeWrapper: React.FC = () => {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
+  const [timeInformations, setTimeInformations] = React.useState<
+    Api.TimeInformation[] | undefined
+  >(undefined);
 
-export default App;
+  React.useEffect(() => {
+    async function handleApi() {
+      try {
+        setTimeInformations(
+          await Api.requests.getPrayerTimes(DEFAULT_DISTRIC_ID)
+        );
+      } catch (error) {
+        setHasError(true);
+      }
+      setIsLoading(false);
+    }
+    handleApi();
+  }, []);
+
+  const loadingComponent = <span>Loading...</span>;
+
+  if (isLoading) {
+    return loadingComponent;
+  }
+  if (hasError) {
+    return <span>Error !</span>;
+  }
+
+  if (timeInformations) {
+    return (
+      <>
+        <Home timeInformations={timeInformations} />
+      </>
+    );
+  }
+
+  return loadingComponent;
+};
+
+export default HomeWrapper;
