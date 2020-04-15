@@ -57,5 +57,5 @@ export function calcRemainingTime(
 
 export function getClock(prayerTimes: Api.TimeInformation[]): string {
   const currentSunriseTimeDayjs = getSunriseDayjs(prayerTimes);
-  return currentSunriseTimeDayjs.format('HH:MM');
+  return currentSunriseTimeDayjs.format('hh:mm');
 }
