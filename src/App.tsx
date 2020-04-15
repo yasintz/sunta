@@ -18,6 +18,7 @@ function App() {
   const [countryId, setCountryId] = useStrategy(countryLocalStrategy);
   const [cityId, setCityId] = useStrategy(cityLocalStrategy);
   const [districtId, setDistrictId] = useStrategy(districLocalStrategy);
+  const [isShownSettings, setIsShownSettings] = React.useState(false);
 
   const [swipeableIndex, setSwipeableIndex] = useStrategy(
     swipeableIndexLocalStrategy
@@ -109,6 +110,18 @@ function App() {
     true
   );
 
+  useWatch(
+    () => {
+      if (swipeableIndex === 3) {
+        setTimeout(() => {
+          setIsShownSettings(true);
+        }, 1500);
+      }
+    },
+    swipeableIndex,
+    true
+  );
+
   const loadingComponent = (
     <div className="page-container">
       <span>Loading...</span>
@@ -131,17 +144,21 @@ function App() {
     const apps = [
       <Diff timeInformations={timeInformations} />,
       <Clock timeInformations={timeInformations} />,
-      <Settings
-        countries={countries}
-        cities={cities}
-        districts={districts}
-        selectedCountryId={countryId}
-        selectedCityId={cityId}
-        selectedDistrictId={districtId}
-        setSelectedCountryId={setCountryId}
-        setSelectedCityId={setCityId}
-        setSelectedDistrictId={setDistrictId}
-      />,
+      isShownSettings ? (
+        <Settings
+          countries={countries}
+          cities={cities}
+          districts={districts}
+          selectedCountryId={countryId}
+          selectedCityId={cityId}
+          selectedDistrictId={districtId}
+          setSelectedCountryId={setCountryId}
+          setSelectedCityId={setCityId}
+          setSelectedDistrictId={setDistrictId}
+        />
+      ) : (
+        <span>Loading...</span>
+      ),
     ];
     return (
       <SwipeableViews
