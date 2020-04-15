@@ -112,7 +112,7 @@ function App() {
 
   useWatch(
     () => {
-      if (swipeableIndex === 3) {
+      if (swipeableIndex === 2) {
         setTimeout(() => {
           setIsShownSettings(true);
         }, 1500);
