@@ -27,6 +27,7 @@ function App() {
   const loadingCountRef = React.useRef(0);
 
   const [hasError, setHasError] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const [countries, setCountries] = React.useState<Api.Place[] | undefined>(
     undefined
@@ -43,16 +44,15 @@ function App() {
     Api.TimeInformation[] | undefined
   >(undefined);
 
-  const isLoading = loadingCountRef.current > 0;
-
   const handleApi = React.useCallback(async (fn: () => Promise<any>) => {
     loadingCountRef.current++;
     try {
-      fn();
+      await fn();
     } catch (error) {
       setHasError(true);
     }
     loadingCountRef.current--;
+    setIsLoading(loadingCountRef.current > 0);
   }, []);
 
   React.useEffect(() => {
